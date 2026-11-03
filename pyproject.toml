@@ -1,0 +1,32 @@
+[project]
+name = "agentic-docs-rag"
+version = "1.0.0"
+description = "RAG over the markdown documentation kept by agentic coding tools"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "llama-index-core>=0.14.25,<0.15",
+    "llama-index-embeddings-cohere>=0.9,<0.10",
+    "cohere>=5.21,<6",
+    "llama-index-vector-stores-pinecone>=0.9,<0.10",
+    "pinecone>=9.1,<10",
+    "gradio>=6.31,<7",
+    "python-dotenv>=1.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "pytest-asyncio>=0.24"]
+# For NetFree users; see enable_netfree_ssl_if_available in config.py
+netfree = ["netfree-unstrict-ssl"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["agentic_rag"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]

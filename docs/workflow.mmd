@@ -1,0 +1,37 @@
+flowchart TD
+    Q([User question]) --> V{validate_input}
+    V -- empty or too long --> END1([Short message, no LLM call])
+    V -- valid --> R[route - LLM Router]
+    R -- no structured data, or Router failed --> S
+    R -- semantic --> S[retrieve - vector search in Pinecone]
+    R -- structured --> B[build_structured_query - LLM]
+
+    S --> A{assess_results}
+    A -- confident --> AS[answer_semantic - Response Synthesizer]
+    A -- weak, attempts remain --> RW[rewrite_query - LLM]
+    A -- weak, no attempts left --> AS2[answer_semantic with a warning]
+    A -- nothing above the cutoff --> NA[no_answer]
+    RW -- new query --> S
+    RW -- same query, results exist --> AS2
+    RW -- same query, no results --> NA
+
+    B -- invalid query --> S
+    B -- valid query --> RQ{run_structured_query on knowledge.json}
+    RQ -- items found --> AI[answer_structured - LLM]
+    RQ -- empty, time bound --> NA
+    RQ -- empty, no dates --> S
+
+    AS --> E([Answer, sources, trace])
+    AS2 --> E
+    AI --> E
+    NA --> E
+
+    subgraph Preparation[Preparation workflow - runs before questions]
+      direction LR
+      L[load] --> C[chunk] --> I[index_vectors] --> X[extract] --> SV[save]
+    end
+
+    classDef llm fill:#fde68a,stroke:#b45309,color:#111;
+    classDef data fill:#bfdbfe,stroke:#1d4ed8,color:#111;
+    class R,B,RW,AS,AS2,AI,X llm;
+    class S,RQ,I,SV data;

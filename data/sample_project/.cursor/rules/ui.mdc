@@ -1,0 +1,19 @@
+---
+description: UI rules
+updated: 2026-10-05
+---
+# UI Rules
+
+## RTL
+
+Date: 2026-10-05
+
+Every Hebrew screen must be fully RTL, including tables, forms and dialogs. Code samples and API paths stay LTR. This replaces the earlier rule that applied RTL only to the main screens.
+
+## Components
+
+Use the shared `Button` and `DataTable` components. Do not create one-off variants.
+
+## Colors
+
+Always take colors from the theme tokens in `src/theme/tokens.ts`. Never hardcode a hex value in a component.
