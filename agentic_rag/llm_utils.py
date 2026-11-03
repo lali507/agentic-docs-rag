@@ -22,7 +22,15 @@ class LLMOutputError(ValueError):
     """The LLM did not return data matching the expected schema."""
 
 
+def is_quota_exhausted_error(error: BaseException) -> bool:
+    """OpenAI also answers 429 when the account has no credit; waiting will not help."""
+    text = str(error)
+    return "insufficient_quota" in text or "credit_balance_exhausted" in text
+
+
 def is_rate_limit_error(error: BaseException) -> bool:
+    if is_quota_exhausted_error(error):
+        return False
     status = getattr(error, "status_code", None) or getattr(error, "http_status", None)
     return status == 429 or type(error).__name__ == "TooManyRequestsError"
 

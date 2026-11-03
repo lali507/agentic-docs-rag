@@ -19,14 +19,14 @@
 
 ## הטכנולוגיות
 
-כל השירותים חינמיים, בלי תשלום על המודלים או על מסד הנתונים.
+ספק המודלים נבחר אוטומטית: אם מוגדר `OPENAI_API_KEY` משתמשים ב-OpenAI, אחרת ב-Cohere (אפשר לכפות עם `LLM_PROVIDER`).
 
 | תפקיד | כלי | הערה |
 |---|---|---|
 | Framework ו-Workflow | LlamaIndex | כולל Workflows מבוססי אירועים |
-| Embeddings | Cohere `embed-multilingual-v3.0` | מודל רב-לשוני, כי רוב התיעוד והשאלות בעברית |
-| LLM | Cohere `command-a-03-2025` | מפתח ניסיון חינמי |
-| מסד וקטורי | Pinecone | מסלול Starter החינמי |
+| Embeddings | OpenAI `text-embedding-3-small` / Cohere `embed-multilingual-v3.0` | שניהם רב-לשוניים ותומכים בעברית |
+| LLM | OpenAI `gpt-4.1-mini` / Cohere `command-a-03-2025` | מהיר, זול ואמין בהחזרת JSON ובקריאת פונקציות |
+| מסד וקטורי | Pinecone, או אחסון מקומי | בלי `PINECONE_API_KEY` הווקטורים נשמרים ב-`data/structured/vector_store/` |
 | נתונים מובנים | קובץ JSON | `data/structured/knowledge.json` |
 | ממשק | Gradio | צ'אט מימין לשמאל |
 
@@ -56,9 +56,9 @@ pip install -e ".[dev,netfree]"
 
 ### 2. מפתחות
 
-1. יוצרים מפתח ב-[Cohere](https://dashboard.cohere.com/api-keys) ומפתח ב-[Pinecone](https://app.pinecone.io).
+1. יוצרים מפתח ב-[OpenAI](https://platform.openai.com/api-keys) (או ב-[Cohere](https://dashboard.cohere.com/api-keys)). מפתח [Pinecone](https://app.pinecone.io) הוא רשות.
 2. מעתיקים את `.env.example` לקובץ בשם `.env`.
-3. ממלאים בו את שני המפתחות.
+3. ממלאים בו את המפתחות.
 
 הקובץ `.env` לא נכנס ל-Git.
 
@@ -70,7 +70,7 @@ python -m agentic_rag.check_services
 
 ### 3. הכנת הנתונים
 
-הפקודה סורקת את הקבצים, בונה את האינדקס ב-Pinecone (ויוצרת אותו אם צריך) ומחלצת את הנתונים המובנים:
+הפקודה סורקת את הקבצים, בונה את האינדקס הווקטורי (ב-Pinecone, או מקומית אם אין מפתח) ומחלצת את הנתונים המובנים:
 
 ```bash
 python -m agentic_rag.prepare

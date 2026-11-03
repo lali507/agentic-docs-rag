@@ -146,3 +146,42 @@ async def test_retriever_reads_pinecone_results_including_metadata_and_scores():
     assert nodes[0].score == 0.81
     assert nodes[0].node.get_content() == "the body"
     assert nodes[0].node.metadata["tool"] == "kiro"
+
+
+def test_openai_key_selects_openai_models(monkeypatch):
+    from agentic_rag import config as config_module
+
+    monkeypatch.setattr(config_module, "load_dotenv", lambda *a, **k: None)
+    for name in ("LLM_PROVIDER", "PINECONE_INDEX", "OPENAI_LLM_MODEL", "EMBED_MODEL", "EMBED_DIMENSION"):
+        monkeypatch.delenv(name, raising=False)
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-fake")
+    loaded = config_module.load_settings()
+    assert loaded.llm_provider == "openai" and loaded.embed_dimension == 1536
+    assert loaded.pinecone_index == "agentic-docs-openai" and loaded.extraction_delay_seconds == 0
+    assert services.get_llm(loaded).model == loaded.llm_model
+    assert services.query_embedding(loaded).model_name == "text-embedding-3-small"
+
+
+def test_missing_openai_key_gives_a_clear_error():
+    with pytest.raises(services.MissingKeyError, match="OPENAI_API_KEY"):
+        services.get_llm(Settings(llm_provider="openai"))
+
+
+async def test_local_vector_store_round_trip_without_pinecone(tmp_path):
+    from llama_index.core.schema import TextNode
+
+    config = Settings(local_vector_dir=tmp_path / "vectors")
+    nodes = [TextNode(text="the database is postgres", metadata={"tool": "kiro"}),
+             TextNode(text="buttons are blue", metadata={"tool": "cursor"})]
+    with patch.object(services, "document_embedding", return_value=HashEmbedding()), patch.object(
+        services, "query_embedding", return_value=HashEmbedding()
+    ):
+        assert services.rebuild_vector_index(config, nodes) == 2
+        found = await services.get_retriever(config).aretrieve("which database postgres")
+    assert found[0].node.get_content() == "the database is postgres"
+    assert found[0].node.metadata["tool"] == "kiro"
+
+
+def test_local_retriever_before_prepare_explains_what_to_run(tmp_path):
+    with pytest.raises(services.MissingKeyError, match="prepare"):
+        services.get_retriever(Settings(local_vector_dir=tmp_path / "none"))

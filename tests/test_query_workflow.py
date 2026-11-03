@@ -209,3 +209,13 @@ async def test_real_sample_data_reaches_the_right_chunk_through_a_real_index():
     result = await wf.run(question="איך מתקינים ומריצים pnpm install db:migrate")
     assert any("CLAUDE.md" in source for source in result.sources)
     assert "pnpm install" in llm.prompts[-1]
+
+
+def test_exhausted_quota_is_not_treated_as_a_rate_limit():
+    from agentic_rag.llm_utils import is_rate_limit_error
+
+    class Fake429(Exception):
+        status_code = 429
+
+    assert is_rate_limit_error(Fake429("slow down"))
+    assert not is_rate_limit_error(Fake429("Error code: 429 - {'type': 'insufficient_quota'}"))
